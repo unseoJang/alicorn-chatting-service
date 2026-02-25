@@ -1,0 +1,14 @@
+{
+	"nuxt.isNuxtApp": false,
+	"files.associations": {
+		"*.svelte": "svelte"
+	},
+	"[svelte]": {
+		"editor.defaultFormatter": "svelte.svelte-vscode",
+		"editor.quickSuggestions": {
+			"other": true,
+			"comments": false,
+			"strings": true
+		}
+	}
+}
