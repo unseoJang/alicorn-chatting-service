@@ -36,6 +36,11 @@ export const chatApi = {
 		return fetchApi<Message[]>(`/rooms/${roomId}/messages`);
 	},
 
+	/** 채팅방 확인 시 읽음 처리 (리스트 숫자 제거) */
+	async markRoomAsRead(roomId: string): Promise<void> {
+		await fetch(`${BASE_URL}/api/rooms/${roomId}/read`, { method: 'POST' });
+	},
+
 	/** 메시지 전송 */
 	async sendMessage(payload: SendMessagePayload): Promise<Message> {
 		return fetchApi<Message>('/messages', {

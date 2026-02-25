@@ -14,6 +14,18 @@
 	let rooms = $state<Room[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
+	let searchQuery = $state('');
+
+	const filteredRooms = $derived(
+		searchQuery.trim()
+			? rooms.filter((room) => {
+					const q = searchQuery.trim().toLowerCase();
+					const nameMatch = room.partner.name.toLowerCase().includes(q);
+					const messageMatch = room.lastMessage?.toLowerCase().includes(q);
+					return nameMatch || messageMatch;
+				})
+			: rooms
+	);
 
 	async function loadRooms() {
 		loading = true;
@@ -28,6 +40,7 @@
 	}
 
 	$effect(() => {
+		currentRoomId;
 		loadRooms();
 	});
 
@@ -51,13 +64,32 @@
 		<a href="/chat" class="new-msg-btn" title="새 메시지">새 메시지</a>
 	</div>
 
+	<div class="sidebar-search">
+		<svg class="search-icon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<circle cx="11" cy="11" r="8" />
+			<path d="m21 21-4.35-4.35" />
+		</svg>
+		<input
+			type="search"
+			class="search-input"
+			placeholder="대화 검색하기"
+			aria-label="대화 검색"
+			bind:value={searchQuery}
+		/>
+	</div>
+
 	{#if loading}
 		<div class="sidebar-loading">불러오는 중...</div>
 	{:else if error}
 		<div class="sidebar-error">{error}</div>
 	{:else}
 		<nav class="room-list">
-			{#each rooms as room (room.id)}
+			{#if filteredRooms.length === 0}
+				<div class="search-empty">
+					{searchQuery.trim() ? '검색 결과가 없습니다.' : '대화가 없습니다.'}
+				</div>
+			{:else}
+			{#each filteredRooms as room (room.id)}
 				<button
 					class="room-item"
 					class:active={room.id === currentRoomId}
@@ -77,6 +109,7 @@
 					{/if}
 				</button>
 			{/each}
+			{/if}
 		</nav>
 	{/if}
 </aside>
@@ -163,6 +196,37 @@
 	.new-msg-btn:hover {
 		background: var(--unread-bg);
 		text-decoration: none;
+	}
+	.sidebar-search {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		border-bottom: 1px solid var(--border);
+		background: var(--bg-sidebar);
+	}
+	.search-icon {
+		flex-shrink: 0;
+		color: var(--text-muted);
+	}
+	.search-input {
+		flex: 1;
+		min-width: 0;
+		padding: 0.5rem 0;
+		border: none;
+		background: none;
+		color: var(--text);
+		font-size: 0.875rem;
+		outline: none;
+	}
+	.search-input::placeholder {
+		color: var(--text-muted);
+	}
+	.search-empty {
+		padding: 1.5rem 1rem;
+		text-align: center;
+		color: var(--text-muted);
+		font-size: 0.875rem;
 	}
 	.sidebar-loading,
 	.sidebar-error {

@@ -3,6 +3,7 @@
 	import { invalidateAll } from '$app/navigation';
 
 	let { data }: { data: { form?: { message?: string } } } = $props();
+	let showSignUp = $state(false);
 </script>
 
 <svelte:head>
@@ -12,25 +13,73 @@
 <div class="login-page">
 	<div class="login-card">
 		<h1 class="login-title">Alicorn 채팅</h1>
-		<p class="login-desc">로그인하여 대화를 시작하세요.</p>
+		<p class="login-desc">
+			{showSignUp ? '회원가입 후 로그인하세요.' : '로그인하여 대화를 시작하세요.'}
+		</p>
 
-		<form
-			class="login-form"
-			method="POST"
-			action="?/login"
-			use:enhance={() => {
-				return async ({ result }) => {
-					if (result.type === 'redirect') await invalidateAll();
-				};
-			}}
-		>
-			<label for="name" class="label">이름</label>
-			<input id="name" name="name" type="text" class="input" placeholder="이름을 입력하세요" required />
-			{#if data.form?.message}
-				<p class="form-error">{data.form.message}</p>
-			{/if}
-			<button type="submit" class="submit">로그인</button>
-		</form>
+		{#if showSignUp}
+			<form
+				class="login-form"
+				method="POST"
+				action="?/signup"
+				use:enhance={() => {
+					return async ({ result }) => {
+						if (result.type === 'redirect') await invalidateAll();
+					};
+				}}
+			>
+				<label for="name" class="label">이름 (선택)</label>
+				<input id="name" name="name" type="text" class="input" placeholder="표시 이름" />
+				<label for="email" class="label">이메일</label>
+				<input
+					id="email"
+					name="email"
+					type="email"
+					class="input"
+					placeholder="you@example.com"
+					required
+				/>
+				<label for="password" class="label">비밀번호 (6자 이상)</label>
+				<input id="password" name="password" type="password" class="input" required minlength="6" />
+				{#if data.form?.message}
+					<p class="form-error">{data.form.message}</p>
+				{/if}
+				<button type="submit" class="submit">가입하기</button>
+				<button type="button" class="link-btn" onclick={() => (showSignUp = false)}>
+					이미 계정이 있으면 로그인
+				</button>
+			</form>
+		{:else}
+			<form
+				class="login-form"
+				method="POST"
+				action="?/login"
+				use:enhance={() => {
+					return async ({ result }) => {
+						if (result.type === 'redirect') await invalidateAll();
+					};
+				}}
+			>
+				<label for="email" class="label">이메일</label>
+				<input
+					id="email"
+					name="email"
+					type="email"
+					class="input"
+					placeholder="you@example.com"
+					required
+				/>
+				<label for="password" class="label">비밀번호</label>
+				<input id="password" name="password" type="password" class="input" required />
+				{#if data.form?.message}
+					<p class="form-error">{data.form.message}</p>
+				{/if}
+				<button type="submit" class="submit">로그인</button>
+				<button type="button" class="link-btn" onclick={() => (showSignUp = true)}>
+					계정이 없으면 가입하기
+				</button>
+			</form>
+		{/if}
 	</div>
 </div>
 
@@ -104,5 +153,18 @@
 	}
 	.submit:hover {
 		background: var(--accent-hover);
+	}
+	.link-btn {
+		margin-top: 0.25rem;
+		padding: 0.5rem;
+		background: none;
+		border: none;
+		color: var(--text-muted);
+		font-size: 0.8125rem;
+		cursor: pointer;
+		text-decoration: underline;
+	}
+	.link-btn:hover {
+		color: var(--text);
 	}
 </style>

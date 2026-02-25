@@ -19,6 +19,7 @@
 			room = null;
 			return;
 		}
+		chatApi.markRoomAsRead(id);
 		let cancelled = false;
 		loading = true;
 		chatApi.getRooms().then((rooms) => {

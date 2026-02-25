@@ -42,4 +42,17 @@ pnpm preview   # 프로덕션 미리보기
 
 ## 환경 변수
 
+- `PUBLIC_SUPABASE_URL`: Supabase 프로젝트 URL (필수, 로그인용)
+- `PUBLIC_SUPABASE_ANON_KEY`: Supabase anon key (필수)
 - `PUBLIC_API_BASE`: 백엔드 API 기본 URL (미설정 시 같은 origin의 `/api` 사용)
+
+`.env.example`을 참고해 `.env` 또는 `.env.local`을 만들고 위 값을 채우세요.
+
+### Supabase URL 설정 (로그인 리다이렉트)
+
+[Auth URL Configuration](https://supabase.com/dashboard/project/espllccornzwtdtoqnon/auth/url-configuration)에서 다음을 설정하세요.
+
+- **Site URL**: 로컬 개발 시 `http://localhost:5173`, 배포 시 실제 도메인
+- **Redirect URLs**: `http://localhost:5173/**`, 배포 도메인 (예: `https://your-app.com/**`)
+
+Supabase 대시보드 **Authentication > Providers**에서 **Email**을 켜면 이메일/비밀번호 로그인·회원가입을 사용할 수 있습니다.

@@ -13,7 +13,8 @@ export const mockCurrentUser: User = {
 const mockPartners: User[] = [
 	{ id: 'u1', name: '김철수' },
 	{ id: 'u2', name: '이영희' },
-	{ id: 'u3', name: '박민수' }
+	{ id: 'u3', name: '박민수' },
+	{ id: 'u4', name: '정지훈' }
 ];
 
 const mockRooms: Room[] = [
@@ -37,6 +38,13 @@ const mockRooms: Room[] = [
 		lastMessage: 'https://example.com 문서 확인해 주세요.',
 		lastMessageAt: '2026-02-24T16:00:00Z',
 		unreadCount: 0
+	},
+	{
+		id: 'r4',
+		partner: mockPartners[3]!,
+		lastMessage: '3일 전에 보낸 메시지예요.',
+		lastMessageAt: '2026-02-22T14:20:00Z',
+		unreadCount: 0
 	}
 ];
 
@@ -52,6 +60,11 @@ const mockMessagesByRoom: Record<string, Message[]> = {
 	],
 	r3: [
 		{ id: 'm6', roomId: 'r3', senderId: 'u3', content: 'https://example.com 문서 확인해 주세요.', createdAt: '2026-02-24T16:00:00Z', read: true }
+	],
+	r4: [
+		{ id: 'm7', roomId: 'r4', senderId: 'u4', content: '안녕하세요, 지난주 논의했던 건 어떻게 되었나요?', createdAt: '2026-02-22T10:00:00Z', read: true },
+		{ id: 'm8', roomId: 'r4', senderId: 'me', content: '네, 내부 검토 중이에요. 금요일까지 연락드릴게요.', createdAt: '2026-02-22T10:15:00Z', read: true },
+		{ id: 'm9', roomId: 'r4', senderId: 'u4', content: '3일 전에 보낸 메시지예요.', createdAt: '2026-02-22T14:20:00Z', read: true }
 	]
 };
 
@@ -67,8 +80,16 @@ export const mockApi = {
 	},
 
 	async getMessages(roomId: string): Promise<Message[]> {
+		const room = mockRooms.find((r) => r.id === roomId);
+		if (room) room.unreadCount = 0;
 		const list = mockMessagesByRoom[roomId] ?? [];
 		return [...list].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+	},
+
+	/** 채팅방 확인 시 읽음 처리 (리스트 숫자 제거) */
+	markRoomAsRead(roomId: string): void {
+		const room = mockRooms.find((r) => r.id === roomId);
+		if (room) room.unreadCount = 0;
 	},
 
 	async sendMessage(roomId: string, content: string): Promise<Message> {
