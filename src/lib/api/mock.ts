@@ -1,6 +1,6 @@
 /**
- * 백엔드 미구현 시 사용하는 Mock 데이터 및 API
- * 실제 API 연동 시 client.ts의 fetch 경로만 사용하면 됨
+ * Mock 데이터 및 API (채팅 백엔드)
+ * API 라우트에서 이 모듈을 사용 중입니다. Supabase 연동 시 해당 라우트만 교체하면 됩니다.
  */
 
 import type { Message, Room, User } from '$lib/types/chat';
@@ -14,7 +14,13 @@ const mockPartners: User[] = [
 	{ id: 'u1', name: '김철수' },
 	{ id: 'u2', name: '이영희' },
 	{ id: 'u3', name: '박민수' },
-	{ id: 'u4', name: '정지훈' }
+	{ id: 'u4', name: '정지훈' },
+	/* 대화 없는 더미 (새 대화 검색용) */
+	{ id: 'u5', name: '최수진' },
+	{ id: 'u6', name: '한동훈' },
+	{ id: 'u7', name: '오세훈' },
+	{ id: 'u8', name: '강미래' },
+	{ id: 'u9', name: '윤서준' }
 ];
 
 const mockRooms: Room[] = [
@@ -111,8 +117,10 @@ export const mockApi = {
 		return msg;
 	},
 
-	async searchUsers(_query: string): Promise<User[]> {
-		return [...mockPartners];
+	async searchUsers(query: string): Promise<User[]> {
+		const q = query.trim().toLowerCase();
+		if (!q) return [];
+		return mockPartners.filter((p) => p.name.toLowerCase().includes(q));
 	},
 
 	async createRoom(partnerId: string): Promise<Room> {

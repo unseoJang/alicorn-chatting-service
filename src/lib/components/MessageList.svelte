@@ -1,13 +1,15 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { chatApi } from '$lib/api/client';
-	import { mockCurrentUser } from '$lib/api/mock';
 	import type { Message } from '$lib/types/chat';
 
 	interface Props {
 		roomId: string;
+		/** 로그인 사용자 id. 내 메시지 구분용 (비어 있으면 모두 상대 메시지로 표시) */
+		currentUserId?: string;
 	}
 
-	let { roomId }: Props = $props();
+	let { roomId, currentUserId = '' }: Props = $props();
 
 	let messages = $state<Message[]>([]);
 	let loading = $state(true);
@@ -35,6 +37,15 @@
 		return () => window.removeEventListener('chat:new-message', handler as EventListener);
 	});
 
+	/** 메시지 로드/추가 시 맨 아래로 스크롤 */
+	$effect(() => {
+		const _ = messages.length;
+		if (loading || !listEl) return;
+		tick().then(() => {
+			listEl.scrollTop = listEl.scrollHeight;
+		});
+	});
+
 	/** URL을 링크로 감싸서 반환 (Optional: clickable URL) */
 	function linkify(text: string): string {
 		const urlPattern = /(https?:\/\/[^\s<]+)/g;
@@ -47,8 +58,8 @@
 		<div class="message-loading">메시지 불러오는 중...</div>
 	{:else}
 		{#each messages as msg (msg.id)}
-			<div class="message-row" class:mine={msg.senderId === mockCurrentUser.id}>
-				<div class="chat-message" class:mine={msg.senderId === mockCurrentUser.id}>
+			<div class="message-row" class:mine={Boolean(currentUserId && (msg.senderId === currentUserId || msg.senderId === 'me'))}>
+				<div class="chat-message" class:mine={Boolean(currentUserId && (msg.senderId === currentUserId || msg.senderId === 'me'))}>
 					{@html linkify(msg.content)}
 				</div>
 				<span class="message-time">{new Date(msg.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</span>
