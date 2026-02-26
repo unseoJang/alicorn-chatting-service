@@ -1,13 +1,20 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { chatApi } from '$lib/api/client';
-	import type { Room, User } from '$lib/types/chat';
+	import { subscribeToRoom } from '$lib/socket/index';
+	import {
+		dispatchNewMessage,
+		fetchRoomById,
+		markRoomAsRead,
+		findOrCreateRoom,
+		PARTNER_SEARCH_DEBOUNCE_MS
+	} from '$lib/chat';
+	import type { Message, Room, User } from '$lib/types/chat';
 	import MessageList from '$lib/components/MessageList.svelte';
 	import MessageInput from '$lib/components/MessageInput.svelte';
 
 	interface Props {
 		roomId?: string;
-		/** 로그인 사용자 id (Supabase auth). 내 메시지 구분용 */
 		currentUserId?: string;
 	}
 
@@ -16,7 +23,6 @@
 	let room = $state<Room | null>(null);
 	let loading = $state(false);
 
-	/** 새 대화: 상대 검색 */
 	let partnerSearchQuery = $state('');
 	let searchResults = $state<User[]>([]);
 	let searchLoading = $state(false);
@@ -28,51 +34,55 @@
 			room = null;
 			return;
 		}
-		chatApi.markRoomAsRead(id);
 		let cancelled = false;
 		loading = true;
-		chatApi.getRooms().then((rooms) => {
-			if (cancelled) return;
-			room = rooms.find((r) => r.id === id) ?? null;
-			loading = false;
-		});
+		markRoomAsRead(id)
+			.then(() => fetchRoomById(id))
+			.then((r) => {
+				if (cancelled) return;
+				room = r;
+			})
+			.finally(() => {
+				if (!cancelled) loading = false;
+			});
 		return () => {
 			cancelled = true;
 		};
 	});
 
-	/** 대화 상대 검색 (디바운스) */
-	let searchTimeout: ReturnType<typeof setTimeout>;
+	$effect(() => {
+		const id = roomId;
+		if (!id) return;
+		const unsubscribe = subscribeToRoom(id, (message: Message) => {
+			dispatchNewMessage(message);
+		});
+		return unsubscribe;
+	});
+
 	$effect(() => {
 		const q = partnerSearchQuery.trim();
-		clearTimeout(searchTimeout);
+		let timeoutId: ReturnType<typeof setTimeout>;
 		if (!q) {
 			searchResults = [];
-			return;
+			return () => {};
 		}
-		searchTimeout = setTimeout(() => {
+		timeoutId = setTimeout(() => {
 			searchLoading = true;
 			chatApi.searchUsers(q).then((users) => {
 				searchResults = users;
 			}).finally(() => {
 				searchLoading = false;
 			});
-		}, 250);
-		return () => clearTimeout(searchTimeout);
+		}, PARTNER_SEARCH_DEBOUNCE_MS);
+		return () => clearTimeout(timeoutId);
 	});
 
-	async function startConversation(user: User) {
+	async function handleStartConversation(user: User) {
 		if (creatingRoomId) return;
 		creatingRoomId = user.id;
 		try {
-			const rooms = await chatApi.getRooms();
-			const existing = rooms.find((r) => r.partner.id === user.id);
-			if (existing) {
-				goto(`/chat/${existing.id}`);
-				return;
-			}
-			const newRoom = await chatApi.createRoom(user.id);
-			goto(`/chat/${newRoom.id}`);
+			const targetRoom = await findOrCreateRoom(user);
+			goto(`/chat/${targetRoom.id}`);
 		} finally {
 			creatingRoomId = null;
 		}
@@ -108,7 +118,7 @@
 											<button
 												type="button"
 												class="user-option"
-												onclick={() => startConversation(user)}
+												onclick={() => handleStartConversation(user)}
 												disabled={creatingRoomId === user.id}
 											>
 												<span class="user-option-avatar">{user.name.charAt(0)}</span>

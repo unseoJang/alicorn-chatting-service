@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { chatApi } from '$lib/api/client';
-	import type { Message } from '$lib/types/chat';
+	import { sendMessage } from '$lib/chat';
 
 	interface Props {
 		roomId: string;
@@ -11,19 +10,13 @@
 	let text = $state('');
 	let sending = $state(false);
 
-	/** 새 메시지가 추가되면 리스트 갱신을 위해 부모/형제가 구독할 수 있도록 이벤트 발송 */
-	function dispatchNewMessage(message: Message) {
-		window.dispatchEvent(new CustomEvent('chat:new-message', { detail: message }));
-	}
-
-	async function send() {
+	async function handleSend() {
 		const trimmed = text.trim();
 		if (!trimmed || sending) return;
 		text = '';
 		sending = true;
 		try {
-			const message = await chatApi.sendMessage({ roomId, content: trimmed });
-			dispatchNewMessage(message);
+			await sendMessage(roomId, trimmed);
 		} catch (e) {
 			text = trimmed;
 			console.error(e);
@@ -35,7 +28,7 @@
 	function onKeydown(e: KeyboardEvent) {
 		if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault();
-			send();
+			handleSend();
 		}
 	}
 </script>
@@ -49,7 +42,7 @@
 		disabled={sending}
 		rows="1"
 	></textarea>
-	<button class="send-btn" onclick={send} disabled={sending || !text.trim()} type="button">
+	<button class="send-btn" onclick={handleSend} disabled={sending || !text.trim()} type="button">
 		전송
 	</button>
 </div>

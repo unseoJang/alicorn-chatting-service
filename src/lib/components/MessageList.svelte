@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { chatApi } from '$lib/api/client';
+	import { subscribeToNewMessage, isMessageMine } from '$lib/chat';
+	import { linkify, formatMessageTime } from '$lib/utils/format';
 	import type { Message } from '$lib/types/chat';
 
 	interface Props {
 		roomId: string;
-		/** 로그인 사용자 id. 내 메시지 구분용 (비어 있으면 모두 상대 메시지로 표시) */
 		currentUserId?: string;
 	}
 
@@ -30,14 +31,10 @@
 
 	$effect(() => {
 		const id = roomId;
-		const handler = (e: CustomEvent<Message>) => {
-			if (e.detail.roomId === id) loadMessages();
-		};
-		window.addEventListener('chat:new-message', handler as EventListener);
-		return () => window.removeEventListener('chat:new-message', handler as EventListener);
+		const unsubscribe = subscribeToNewMessage(id, () => loadMessages());
+		return unsubscribe;
 	});
 
-	/** 메시지 로드/추가 시 맨 아래로 스크롤 */
 	$effect(() => {
 		const _ = messages.length;
 		if (loading || !listEl) return;
@@ -45,12 +42,6 @@
 			listEl.scrollTop = listEl.scrollHeight;
 		});
 	});
-
-	/** URL을 링크로 감싸서 반환 (Optional: clickable URL) */
-	function linkify(text: string): string {
-		const urlPattern = /(https?:\/\/[^\s<]+)/g;
-		return text.replace(urlPattern, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
-	}
 </script>
 
 <div class="message-list" bind:this={listEl}>
@@ -58,11 +49,11 @@
 		<div class="message-loading">메시지 불러오는 중...</div>
 	{:else}
 		{#each messages as msg (msg.id)}
-			<div class="message-row" class:mine={Boolean(currentUserId && (msg.senderId === currentUserId || msg.senderId === 'me'))}>
-				<div class="chat-message" class:mine={Boolean(currentUserId && (msg.senderId === currentUserId || msg.senderId === 'me'))}>
+			<div class="message-row" class:mine={isMessageMine(msg, currentUserId)}>
+				<div class="chat-message" class:mine={isMessageMine(msg, currentUserId)}>
 					{@html linkify(msg.content)}
 				</div>
-				<span class="message-time">{new Date(msg.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</span>
+				<span class="message-time">{formatMessageTime(msg.createdAt)}</span>
 			</div>
 		{/each}
 	{/if}

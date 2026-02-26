@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { chatApi } from '$lib/api/client';
+	import { filterRoomsByQuery } from '$lib/chat';
 	import type { Room } from '$lib/types/chat';
 	import type { AuthUser } from '$lib/auth';
 
@@ -16,16 +17,7 @@
 	let error = $state<string | null>(null);
 	let searchQuery = $state('');
 
-	const filteredRooms = $derived(
-		searchQuery.trim()
-			? rooms.filter((room) => {
-					const q = searchQuery.trim().toLowerCase();
-					const nameMatch = room.partner.name.toLowerCase().includes(q);
-					const messageMatch = room.lastMessage?.toLowerCase().includes(q);
-					return nameMatch || messageMatch;
-				})
-			: rooms
-	);
+	const filteredRooms = $derived(filterRoomsByQuery(rooms, searchQuery));
 
 	async function loadRooms() {
 		loading = true;
