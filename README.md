@@ -7,6 +7,13 @@
 - **[API 명세](docs/API.md)** — 클라이언트 API·서버 라우트·요청/응답 타입
 - **[Supabase 연동 가이드](docs/SUPABASE.md)** — 테이블·RLS·API 전환 방법, 실시간 메시지(Realtime) 설정
 
+### 최근 변경
+
+- **새 메시지**: 「새 메시지」 클릭 시 모달에서 상대 검색 → 선택 시 방 생성/기존 방 열기
+- **데모 안내**: Socket 서버 미연결 시 채팅 상단에 실시간 알림 비활성 배너 표시
+- **Responsive**: 768px 이하에서 사이드바/채팅 전환, 헤더 뒤로가기로 목록 복귀
+- **배포**: adapter-node 기준 배포 절차·접속 URL 문서화 (README 배포 섹션)
+
 ---
 
 ## 요구사항
@@ -54,6 +61,28 @@ pnpm preview   # Vite 프리뷰 (Socket 없음)
 pnpm start     # 빌드 결과물 + Socket.io로 실행
 ```
 
+## 배포 (Production)
+
+- **Adapter**: `@sveltejs/adapter-node` 사용 (`svelte.config.js`). Node 서버로 빌드·실행합니다.
+- **Vercel 등**에 올리려면 `@sveltejs/adapter-vercel`로 교체 후 `pnpm build`만 사용하면 됩니다 (Socket.io는 Vercel 서버리스와 별도 구성 필요).
+
+### Node 서버로 배포 절차
+
+1. **빌드**
+   ```bash
+   pnpm build
+   ```
+2. **실행** (프로덕션 서버)
+   ```bash
+   node server/index.js
+   ```
+   또는 `pnpm start` (동일 동작).
+3. **접속 URL**
+   - 기본: **http://localhost:3000**
+   - 포트 변경: 환경 변수 `PORT=8080 node server/index.js` → **http://localhost:8080**
+   - 실제 서버에 배포한 경우: 해당 호스트의 URL (예: `https://your-domain.com`)로 접속합니다.
+4. **환경 변수**: 배포 서버에도 `.env`와 동일하게 `PUBLIC_SUPABASE_URL`, `PUBLIC_SUPABASE_ANON_KEY`를 설정하세요. Supabase 대시보드 **Authentication → URL Configuration**의 **Site URL**·**Redirect URLs**에 배포 도메인을 추가해야 로그인이 동작합니다.
+
 ## 구조
 
 - **인증**: Supabase Auth (이메일/비밀번호 로그인·회원가입). 비로그인 시 `/login` 리다이렉트.
@@ -82,6 +111,7 @@ pnpm start     # 빌드 결과물 + Socket.io로 실행
 - [x] **채팅/이벤트 책임 분리**: `$lib/chat`(이벤트·메시지·방·대화)·`$lib/socket`·`$lib/utils` 모듈화, 컴포넌트는 UI 위주
 - [x] Mock 기반 방/메시지/사용자 검색 API ([docs/API.md](docs/API.md) 참고)
 - [x] **데모 환경 안내**: Socket 서버 미연결 시 상단 배너로 「실시간 알림 비활성」 안내, 메시지 전송·저장은 정상 동작
+- [x] **Responsive**: 768px 이하에서 사이드바/채팅 전환, 헤더 뒤로가기로 목록 복귀
 
 ## 환경 변수
 
@@ -142,21 +172,16 @@ Supabase 대시보드 **Authentication → URL Configuration**에서:
 
 | # | 항목 | 상태 | 비고 |
 |---|------|:----:|------|
-| O1 | Responsive 지원 | ⚠️ | viewport 설정 있음, 미디어 쿼리 기반 모바일 레이아웃 미적용 |
+| O1 | Responsive 지원 | ✅ | 768px 이하에서 사이드바/채팅 전환, 헤더 뒤로가기 |
 | O2 | 로그인, 로그아웃 | ✅ | 이름 기반 로그인, 쿠키 세션, `/logout` |
 | O3 | 비 로그인 사용자 접속 시 로그인 유도 | ✅ | `/chat` 등 인증 필요 경로는 미로그인 시 `/login` 리다이렉트 |
 | O4 | 새 메시지 버튼 → 새 대화방 생성 시 대화 상대 검색 | ✅ | 「새 메시지」 클릭 시 모달에서 상대 검색·선택 시 방 생성/기존 방 열기 |
 | O5 | 대화에 URL이 있으면 Clickable하게 출력 | ✅ | `MessageList`에서 `linkify()`로 `<a>` 변환 |
 | O6 | 읽지 않은 메시지가 있으면 화면상 표기를 다르게 | ✅ | `unreadCount` 배지, 방 목록 강조, 채팅방 진입 시 읽음 처리 API 호출 |
 | O7 | 대화를 검색할 수 있음 | ✅ | 사이드바 「대화 검색하기」로 방 목록 필터 (이름·마지막 메시지) |
-| O8 | Production 환경 구축, 임의 URL로 접속 | ⚠️ | `adapter-auto` 사용 (Vercel 등 호환), 배포 절차·URL 문서화 미작성 |
+| O8 | Production 환경 구축, 임의 URL로 접속 | ✅ | `adapter-node` 사용, README에 배포 절차·접속 URL 문서화 |
 
 ### 진행 요약
 
 - **필수**: 7/7 완료
-- **Optional**: 완료 6개, 부분/미적용 2개 (Responsive, Production 문서)
-
-### 추후 보완 시 참고
-
-- **O1 Responsive**: `@media (max-width: 768px)` 등으로 사이드바 토글, 메인 전폭 표시
-- **O8 Production**: `adapter-node` 또는 `adapter-vercel` 명시, README에 배포 및 접속 URL 안내 추가
+- **Optional**: 8/8 완료

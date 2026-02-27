@@ -29,7 +29,11 @@
 			</button>
 		</div>
 	{/if}
-	<div class="chat-body">
+	<div
+		class="chat-body"
+		class:mobile-show-sidebar={!roomId}
+		class:mobile-show-main={!!roomId}
+	>
 		<ChatSidebar currentRoomId={roomId} user={data.user} />
 		{@render children()}
 	</div>
@@ -87,5 +91,34 @@
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
+	}
+
+	@media (max-width: 768px) {
+		.chat-body.mobile-show-main :global(.sidebar) {
+			display: none;
+		}
+		.chat-body.mobile-show-sidebar :global(.main) {
+			display: none;
+		}
+		.chat-body :global(.sidebar) {
+			width: 100%;
+			min-width: 0;
+			max-width: 100%;
+		}
+		.demo-banner {
+			flex-wrap: wrap;
+			padding: 0.5rem 0.75rem;
+			gap: 0.5rem;
+		}
+		.demo-banner-text {
+			font-size: 0.75rem;
+			order: 1;
+			width: 100%;
+			text-align: center;
+		}
+		.demo-banner-close {
+			order: 2;
+			margin-left: auto;
+		}
 	}
 </style>

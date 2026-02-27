@@ -144,6 +144,7 @@
 		<div class="empty-state">불러오는 중...</div>
 	{:else if room}
 		<header class="main-header">
+			<a href="/chat" class="back-link" aria-label="대화 목록으로">←</a>
 			<span class="header-avatar">{room.partner.name.charAt(0)}</span>
 			<h2 class="header-name">{room.partner.name}</h2>
 		</header>
@@ -169,6 +170,29 @@
 		padding: 0.875rem 1.5rem;
 		border-bottom: 1px solid var(--border);
 		background: var(--bg-sidebar);
+	}
+	.back-link {
+		display: none;
+		padding: 0.5rem;
+		margin: -0.5rem 0.5rem -0.5rem -0.5rem;
+		color: var(--text);
+		text-decoration: none;
+		font-size: 1.25rem;
+		line-height: 1;
+		border-radius: 6px;
+		transition: background 0.15s;
+	}
+	.back-link:hover {
+		background: rgba(255, 255, 255, 0.08);
+		text-decoration: none;
+		color: var(--text);
+	}
+	@media (max-width: 768px) {
+		.back-link {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
 	}
 	.header-avatar {
 		width: 40px;
