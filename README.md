@@ -81,6 +81,7 @@ pnpm start     # 빌드 결과물 + Socket.io로 실행
 - [x] **읽지 않은 메시지 수** 표시, 채팅방 진입 시 읽음 처리로 숫자 제거
 - [x] **채팅/이벤트 책임 분리**: `$lib/chat`(이벤트·메시지·방·대화)·`$lib/socket`·`$lib/utils` 모듈화, 컴포넌트는 UI 위주
 - [x] Mock 기반 방/메시지/사용자 검색 API ([docs/API.md](docs/API.md) 참고)
+- [x] **데모 환경 안내**: Socket 서버 미연결 시 상단 배너로 「실시간 알림 비활성」 안내, 메시지 전송·저장은 정상 동작
 
 ## 환경 변수
 
@@ -144,7 +145,7 @@ Supabase 대시보드 **Authentication → URL Configuration**에서:
 | O1 | Responsive 지원 | ⚠️ | viewport 설정 있음, 미디어 쿼리 기반 모바일 레이아웃 미적용 |
 | O2 | 로그인, 로그아웃 | ✅ | 이름 기반 로그인, 쿠키 세션, `/logout` |
 | O3 | 비 로그인 사용자 접속 시 로그인 유도 | ✅ | `/chat` 등 인증 필요 경로는 미로그인 시 `/login` 리다이렉트 |
-| O4 | 새 메시지 버튼 → 새 대화방 생성 시 대화 상대 검색 | ⚠️ | 「새 메시지」 버튼만 있음, 상대 검색·방 생성 UI 미구현 |
+| O4 | 새 메시지 버튼 → 새 대화방 생성 시 대화 상대 검색 | ✅ | 「새 메시지」 클릭 시 모달에서 상대 검색·선택 시 방 생성/기존 방 열기 |
 | O5 | 대화에 URL이 있으면 Clickable하게 출력 | ✅ | `MessageList`에서 `linkify()`로 `<a>` 변환 |
 | O6 | 읽지 않은 메시지가 있으면 화면상 표기를 다르게 | ✅ | `unreadCount` 배지, 방 목록 강조, 채팅방 진입 시 읽음 처리 API 호출 |
 | O7 | 대화를 검색할 수 있음 | ✅ | 사이드바 「대화 검색하기」로 방 목록 필터 (이름·마지막 메시지) |
@@ -153,10 +154,9 @@ Supabase 대시보드 **Authentication → URL Configuration**에서:
 ### 진행 요약
 
 - **필수**: 7/7 완료
-- **Optional**: 완료 5개, 부분/미적용 3개 (Responsive, 새 대화방+상대 검색, Production 문서)
+- **Optional**: 완료 6개, 부분/미적용 2개 (Responsive, Production 문서)
 
 ### 추후 보완 시 참고
 
 - **O1 Responsive**: `@media (max-width: 768px)` 등으로 사이드바 토글, 메인 전폭 표시
-- **O4 새 대화방**: 「새 메시지」 클릭 시 모달/페이지에서 `chatApi.searchUsers()` 호출 후 선택 시 `createRoom(partnerId)` 호출
 - **O8 Production**: `adapter-node` 또는 `adapter-vercel` 명시, README에 배포 및 접속 URL 안내 추가

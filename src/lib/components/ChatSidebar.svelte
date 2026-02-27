@@ -4,6 +4,7 @@
 	import { filterRoomsByQuery } from '$lib/chat';
 	import type { Room } from '$lib/types/chat';
 	import type { AuthUser } from '$lib/auth';
+	import NewMessageModal from '$lib/components/NewMessageModal.svelte';
 
 	interface Props {
 		currentRoomId?: string;
@@ -16,6 +17,7 @@
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let searchQuery = $state('');
+	let newMessageModalOpen = $state(false);
 
 	const filteredRooms = $derived(filterRoomsByQuery(rooms, searchQuery));
 
@@ -53,8 +55,12 @@
 
 	<div class="sidebar-toolbar">
 		<h2 class="sidebar-title">대화</h2>
-		<a href="/chat" class="new-msg-btn" title="새 메시지">새 메시지</a>
+		<button type="button" class="new-msg-btn" title="새 메시지" onclick={() => (newMessageModalOpen = true)}>
+			새 메시지
+		</button>
 	</div>
+
+	<NewMessageModal open={newMessageModalOpen} onclose={() => (newMessageModalOpen = false)} />
 
 	<div class="sidebar-search">
 		<svg class="search-icon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -183,11 +189,13 @@
 		text-decoration: none;
 		padding: 0.375rem 0.625rem;
 		border-radius: 6px;
+		border: none;
+		background: none;
+		cursor: pointer;
 		transition: background 0.15s;
 	}
 	.new-msg-btn:hover {
 		background: var(--unread-bg);
-		text-decoration: none;
 	}
 	.sidebar-search {
 		display: flex;
