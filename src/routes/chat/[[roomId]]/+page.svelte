@@ -7,4 +7,4 @@
 	const currentUserId = $derived(data?.user?.id ?? '');
 </script>
 
-<ChatMain roomId={roomId} currentUserId={currentUserId} />
+<ChatMain roomId={roomId} currentUserId={currentUserId} supabase={data?.supabase} />
