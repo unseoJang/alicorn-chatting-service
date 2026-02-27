@@ -2,15 +2,19 @@
 	import { tick } from 'svelte';
 	import { chatApi } from '$lib/api/client';
 	import { subscribeToNewMessage, isMessageMine } from '$lib/chat';
+	import { subscribeToRoomMessages } from '$lib/realtime/messages';
 	import { linkify, formatMessageTime } from '$lib/utils/format';
 	import type { Message } from '$lib/types/chat';
+	import type { SupabaseClient } from '@supabase/supabase-js';
 
 	interface Props {
 		roomId: string;
 		currentUserId?: string;
+		/** 브라우저 Supabase 클라이언트. 있으면 상대방 메시지 실시간 수신 */
+		supabase?: SupabaseClient | null;
 	}
 
-	let { roomId, currentUserId = '' }: Props = $props();
+	let { roomId, currentUserId = '', supabase = null }: Props = $props();
 
 	let messages = $state<Message[]>([]);
 	let loading = $state(true);
@@ -25,13 +29,33 @@
 		}
 	}
 
+	/** 새 메시지 추가 (중복 제거, created_at 순 유지) */
+	function appendMessage(msg: Message) {
+		if (msg.roomId !== roomId) return;
+		if (messages.some((m) => m.id === msg.id)) return;
+		const next = [...messages, msg].sort(
+			(a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+		);
+		messages = next;
+	}
+
 	$effect(() => {
 		loadMessages();
 	});
 
+	// 로컬 전송 시 이벤트: 기존처럼 refetch 대신 추가만 하여 중복 제거
 	$effect(() => {
 		const id = roomId;
-		const unsubscribe = subscribeToNewMessage(id, () => loadMessages());
+		const unsubscribe = subscribeToNewMessage(id, (msg) => appendMessage(msg));
+		return unsubscribe;
+	});
+
+	// Supabase Realtime: 상대가 보낸 메시지 실시간 수신
+	$effect(() => {
+		const client = supabase ?? null;
+		const id = roomId;
+		if (!client?.channel || !id) return () => {};
+		const unsubscribe = subscribeToRoomMessages(client, id, (msg) => appendMessage(msg));
 		return unsubscribe;
 	});
 

@@ -13,12 +13,16 @@
 	import MessageList from '$lib/components/MessageList.svelte';
 	import MessageInput from '$lib/components/MessageInput.svelte';
 
+	import type { SupabaseClient } from '@supabase/supabase-js';
+
 	interface Props {
 		roomId?: string;
 		currentUserId?: string;
+		/** 브라우저 Supabase 클라이언트 (Realtime 구독용). 없으면 실시간 수신 미동작 */
+		supabase?: SupabaseClient | null;
 	}
 
-	let { roomId, currentUserId = '' }: Props = $props();
+	let { roomId, currentUserId = '', supabase = null }: Props = $props();
 
 	let room = $state<Room | null>(null);
 	let loading = $state(false);
@@ -143,7 +147,7 @@
 			<span class="header-avatar">{room.partner.name.charAt(0)}</span>
 			<h2 class="header-name">{room.partner.name}</h2>
 		</header>
-		<MessageList roomId={room.id} currentUserId={currentUserId} />
+		<MessageList roomId={room.id} currentUserId={currentUserId} supabase={supabase} />
 		<MessageInput roomId={room.id} />
 	{:else}
 		<div class="empty-state">대화방을 찾을 수 없습니다.</div>

@@ -67,3 +67,26 @@
   - 환경 변수로 URL/키 설정  
 
 이렇게 하면 “백엔드 데이터를 Supabase로 넣으면 사용 가능한가?”에 대한 답은 **가능하다**입니다.
+
+---
+
+## 5. 실시간 메시지 수신 (Realtime)
+
+상대가 메시지를 보낼 때 바로 화면에 뜨게 하려면 **Supabase Realtime**을 사용합니다.
+
+### 5.1 Realtime 활성화
+
+Supabase 대시보드에서 `messages` 테이블을 Realtime publication에 추가해야 합니다.
+
+- **Database** → **Publications** → `supabase_realtime` → **Add table** → `messages` 선택  
+또는 SQL Editor에서:
+
+```sql
+alter publication supabase_realtime add table messages;
+```
+
+### 5.2 동작 방식
+
+- 프론트에서 `messages` 테이블의 `INSERT`를 구독합니다 (`room_id` 필터).
+- 새 행이 들어오면 콜백으로 `Message`를 넘기고, `MessageList`에서 목록에 추가합니다.
+- 로컬에서 보낸 메시지는 기존처럼 이벤트로 추가되며, Realtime으로도 동일 행이 오면 id 기준으로 중복 제거됩니다.
